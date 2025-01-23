@@ -5,7 +5,7 @@ import StarterKit from "@tiptap/starter-kit"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Bold, Italic, List, Search, Settings } from "lucide-react"
+import { Bold, Italic, List, Search } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { useState } from "react"
 
