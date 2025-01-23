@@ -1,4 +1,4 @@
-import TiptapEditor from "@/components/tiptap-editor"
+import TiptapEditor from "../app/_components/tiptap-editor"
 
 export default function Page() {
   return (
