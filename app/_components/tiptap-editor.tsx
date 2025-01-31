@@ -156,7 +156,7 @@ export default function TiptapEditor() {
 
       <footer className="bg-white shadow-md mt-8 py-4">
         <div className="container mx-auto text-center" style={{ color: colors.lightText }}>
-          <p>&copy; 2023 TamilGrammarly. All rights reserved.</p>
+          <p>&copy; 2024 TamilGrammarly. All rights reserved.</p>
         </div>
       </footer>
     </div>
