@@ -1,5 +1,7 @@
 "use client"
 
+import Grammarly from "../Grammarly/grammarly";
+
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { Button } from "@/components/ui/button"
