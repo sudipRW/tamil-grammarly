@@ -19,7 +19,6 @@ const colors = {
 }
 
 export default function TiptapEditor() {
-  const [title, setTitle] = useState("Untitled Document")
   const [apiKey, setApiKey] = useState("")
   const [context, setContext] = useState("Convert to formal Tamil")
   const hasPromptedForApiKey = useRef(false)
