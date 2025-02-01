@@ -52,6 +52,23 @@ class Grammarly {
             return `Error: ${e.message}`;
         }
     }
+
+    async summarize_paragraph(text: string, from_lang: string, to_lang: string) {
+        try{
+            let tamilText = text;
+            console.log(tamilText);
+
+            const textQuery = await this.model.generateContent(`The following input is in ${from_lang} text. Summarize the text in ${to_lang}. The input: ${text}`);
+
+            tamilText = textQuery.response.text().trim();
+            console.log("Summarized text:", tamilText);
+            return tamilText;
+        }
+        catch (e : any) {
+            console.error("Error in Grammarly processing:", e);
+            return `Error: ${e.message}`;
+        }
+    }
 }
 
 export default Grammarly;
