@@ -60,7 +60,8 @@ export default function TiptapEditor() {
       }
 
       editor?.commands.setContent(corrected_text)
-    } catch (error) {
+    }
+    catch (error) {
       console.error("Error checking grammar:", error)
       alert("An error occurred while checking grammar. Please try again.")
     }

@@ -52,6 +52,37 @@ class Grammarly {
             return `Error: ${e.message}`;
         }
     }
+
+    async suggestNextSentenceTamil(text: string) {
+        console.log("Suggesting next sentence for:", text);
+        const nextSentence = await this.model.generateContent(`The following input is a sentence in Tamil. Provide the next sentence in Tamil. The input: ${text} Only give the tamil suggestion and nothing else`);
+        console.log("Next sentence:", nextSentence.response.text());
+        return nextSentence.response.text();
+    }
+
+    async suggestNextSentenceEnglish(text: string) {
+        console.log("Suggesting next sentence for:", text);
+        const nextSentence = await this.model.generateContent(`The following input is a sentence in English or Tamil or a combination of both languages. Suggest the sentence which should follow this text. The input: ${text} Only give the english suggestion and nothing else`);
+        console.log("Next sentence eng:", nextSentence.response.text());
+        return nextSentence.response.text();
+    }
+
+    async summarize_paragraph(text: string, from_lang: string, to_lang: string) {
+        try{
+            let tamilText = text;
+            console.log(tamilText);
+
+            const textQuery = await this.model.generateContent(`The following input is in ${from_lang} text. Summarize the text in ${to_lang}. The input: ${text}`);
+
+            tamilText = textQuery.response.text().trim();
+            console.log("Summarized text:", tamilText);
+            return tamilText;
+        }
+        catch (e : any) {
+            console.error("Error in Grammarly processing:", e);
+            return `Error: ${e.message}`;
+        }
+    }
 }
 
 export default Grammarly;
