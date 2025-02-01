@@ -83,6 +83,23 @@ class Grammarly {
             return `Error: ${e.message}`;
         }
     }
+
+    async translate(text: string, to_lang: string) {
+        try {
+            let tamilText = text;
+            console.log(tamilText);
+
+            const textQuery = await this.model.generateContent(`The following input is in Tamil text. Translate the text to ${to_lang}. The input: ${text}`);
+
+            let translatedText = textQuery.response.text().trim();
+            console.log("Translated text:", translatedText);
+            return translatedText;
+        }
+        catch (e : any) {
+            console.error("Error in Grammarly processing:", e);
+            return `Error: ${e.message}`;
+        }
+    }
 }
 
 export default Grammarly;
