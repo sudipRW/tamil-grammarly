@@ -100,6 +100,10 @@ class Grammarly {
             return `Error: ${e.message}`;
         }
     }
+    async elaborate(text : string){
+        const elaboratedLang = await this.model.generateContent(`Detect the language of the following text and elaborate on it in the same language. The input: ${text}`);
+        return elaboratedLang.response.text();
+    }
 }
 
 export default Grammarly;

@@ -41,7 +41,7 @@ export default function ApiKeyManager() {
   }, [])
 
   // Save API Key
-  const saveApiKey = async (key) => {
+  const saveApiKey = async (key : any) => {
     try {
       const db = await initDB()
       await db.put("apiKey", { id: "current", value: key })

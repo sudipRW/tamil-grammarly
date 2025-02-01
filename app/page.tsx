@@ -142,6 +142,7 @@ export default function NotionLikeEditor() {
       
       setSelectedCommand("")
     },
+
   })
 
   if (!editor) return null

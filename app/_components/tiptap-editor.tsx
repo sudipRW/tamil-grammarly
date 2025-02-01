@@ -60,6 +60,8 @@ export default function TiptapEditor() {
       console.log("Next sentence:", nextSentence)
       const nextSentenceEng = await gram.suggestNextSentenceEnglish(corrected_text);
       console.log(nextSentenceEng);
+
+      console.log("Elaborating the text : ", await gram.elaborate(corrected_text));
       if (corrected_text.startsWith("Error:")) {
         throw new Error(corrected_text)
       }
