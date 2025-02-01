@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Bold, Italic, List, Check } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { useState, useEffect, useRef } from "react"
-import Grammarly from "../../utils/grammarly"
+import { useState } from "react"
+import Grammarly from "../_grammarly/grammarly"
 
 const colors = {
   primary: "#3498db",
@@ -20,7 +20,6 @@ const colors = {
 export default function TiptapEditor() {
   const [apiKey, setApiKey] = useState("")
   const [context, setContext] = useState("Convert to formal Tamil")
-  const hasPromptedForApiKey = useRef(false)
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -40,21 +39,9 @@ export default function TiptapEditor() {
     },
   })
 
-  useEffect(() => {
-    if (!hasPromptedForApiKey.current) {
-      hasPromptedForApiKey.current = true
-      const key = prompt("Please enter your API key:")
-      if (key) {
-        setApiKey(key)
-      } else {
-        alert("API key is required to use this application.")
-      }
-    }
-  }, [])
-
   const handleGrammarCheck = async () => {
     if (!apiKey) {
-      alert("API key is missing. Please refresh the page and enter your API key.")
+      alert("Please enter an API key to use grammar check.")
       return
     }
 
@@ -66,7 +53,6 @@ export default function TiptapEditor() {
     try {
       const gram = new Grammarly(apiKey)
       const currentText = editor?.getText() || ""
-
       const corrected_text = await gram.grammarly(currentText, context)
 
       if (corrected_text.startsWith("Error:")) {
@@ -91,24 +77,26 @@ export default function TiptapEditor() {
           <h1 className="text-2xl font-bold" style={{ color: colors.primary }}>
             TamilGrammarly
           </h1>
-          
         </div>
       </header>
 
       <main className="flex-grow container mx-auto py-8">
         <Card className="w-full max-w-4xl mx-auto shadow-lg bg-white">
           <CardHeader className="border-b" style={{ backgroundColor: colors.primary, color: "white" }}>
-            <div className="flex items-center justify-between gap-4 pb-4">
-              <div className="flex-1 flex items-center gap-2">
-                <Input
-                  value={context}
-                  onChange={(e) => setContext(e.target.value)}
-                  placeholder="Enter context (e.g., 'convert english to tamil', 'formal tamil')"
-                  className="max-w-sm bg-white text-gray-800"
-                />
-              </div>
+            <div className="flex flex-col gap-4 pb-4">
+              <Input
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Enter API key"
+                className="bg-white text-gray-800"
+              />
+              <Input
+                value={context}
+                onChange={(e) => setContext(e.target.value)}
+                placeholder="Enter context (e.g., 'convert english to tamil', 'formal tamil')"
+                className="bg-white text-gray-800"
+              />
             </div>
-            
             <div className="flex items-center gap-2 pt-2">
               <Button
                 variant="ghost"
@@ -140,6 +128,7 @@ export default function TiptapEditor() {
                 onClick={handleGrammarCheck}
                 className="ml-auto"
                 style={{ backgroundColor: colors.secondary, color: "white" }}
+                disabled={!apiKey}
               >
                 <Check className="h-4 w-4 mr-2" />
                 Check Grammar (Shift+F7)
@@ -160,4 +149,3 @@ export default function TiptapEditor() {
     </div>
   )
 }
-
