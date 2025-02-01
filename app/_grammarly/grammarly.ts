@@ -66,6 +66,7 @@ class Grammarly {
         console.log("Next sentence eng:", nextSentence.response.text());
         return nextSentence.response.text();
     }
+
 }
 
 export default Grammarly;
