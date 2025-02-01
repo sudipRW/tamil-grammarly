@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Bold, Italic, List, Check } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { useState, useEffect, useRef } from "react"
-import Grammarly from "../../utils/grammarly"
+import Grammarly from "../_grammarly/grammarly"
 
 const colors = {
   primary: "#3498db",
@@ -67,14 +67,19 @@ export default function TiptapEditor() {
       const gram = new Grammarly(apiKey)
       const currentText = editor?.getText() || ""
 
-      const corrected_text = await gram.grammarly(currentText, context)
-
+      const corrected_text = await gram.grammarly(currentText, context);
+      console.log("Corrected text:", corrected_text)
+      const nextSentence = await gram.suggestNextSentenceTamil(corrected_text);
+      console.log("Next sentence:", nextSentence)
+      const nextSentenceEng = await gram.suggestNextSentenceEnglish(corrected_text);
+      console.log(nextSentenceEng);
       if (corrected_text.startsWith("Error:")) {
         throw new Error(corrected_text)
       }
 
       editor?.commands.setContent(corrected_text)
-    } catch (error) {
+    }
+    catch (error) {
       console.error("Error checking grammar:", error)
       alert("An error occurred while checking grammar. Please try again.")
     }
