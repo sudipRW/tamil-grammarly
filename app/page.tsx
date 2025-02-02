@@ -1,13 +1,17 @@
 "use client"
 
 import { useEditor, EditorContent, Extension } from "@tiptap/react"
-import {Suggestion} from "@tiptap/suggestion"
+import { Suggestion } from "@tiptap/suggestion"
 import StarterKit from "@tiptap/starter-kit"
 import { ReactRenderer } from "@tiptap/react"
 import tippy from "tippy.js"
 import "tippy.js/dist/tippy.css"
-import { useState, useCallback, forwardRef } from "react"
+import { useState, useEffect, forwardRef } from "react"
 import ApiKeyManager from "@/components/apikey_manager"
+import Grammarly from "./_grammarly/grammarly" // Import your Grammarly class
+
+// Initialize Grammarly
+const grammarly = new Grammarly("AIzaSyA91aNJVRZ0n5G5byHqLuKRPeVgzWOEtYY")
 
 // Suggestion component for the dropdown
 const CommandsList = forwardRef((props, ref) => {
@@ -33,6 +37,7 @@ CommandsList.displayName = "CommandsList"
 // Suggestion configuration
 const suggestion = {
   items: ({ query }) => {
+    console.log(query);
     const commands = ["Summarize", "Translate", "Elaborate"]
     return commands.filter(item =>
       item.toLowerCase().startsWith(query.toLowerCase())
@@ -95,14 +100,21 @@ const SlashCommands = Extension.create({
     return {
       suggestion: {
         char: "/",
-        command: ({ editor, range, props }) => {
-          editor
-            .chain()
-            .focus()
-            .deleteRange(range)
-            .setNode("paragraph")
-            .insertContent(` Executing ${props} command...`)
-            .run()
+        command: async ({ editor, range, props }) => {
+          editor.chain().focus().deleteRange(range).setNode("paragraph").insertContent(` Processing ${props}...`).run()
+
+          let result = ""
+          const text = editor.getText()
+
+          if (props === "Summarize") {
+            result = await grammarly.summarize_paragraph(text, "English", "English")
+          } else if (props === "Translate") {
+            result = await grammarly.translate(text, "Tamil")
+          } else if (props === "Elaborate") {
+            result = await grammarly.elaborate(text)
+          }
+
+          editor.chain().focus().setContent(result).run()
         },
         ...suggestion,
       },
@@ -121,28 +133,33 @@ const SlashCommands = Extension.create({
 
 export default function NotionLikeEditor() {
   const [selectedCommand, setSelectedCommand] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const editor = useEditor({
     extensions: [
       StarterKit,
       SlashCommands,
     ],
-    content: "<p  >Welcome to the Notion-like editor! Type / to see available commands.</p>",
-    onUpdate: ({ editor }) => {
+    content: "<p>Welcome to the Notion-like editor! Type / to see available commands.</p>",
+    onUpdate: async ({ editor }) => {
       if (!editor || !selectedCommand) return
+      setLoading(true)
 
-      // Handle command execution
+      const text = editor.getText()
+      let processedText = ""
+
       if (selectedCommand === "Summarize") {
-        editor.chain().focus().setContent("Summarizing the content...").run()
+        processedText = await grammarly.summarize_paragraph(text, "English", "English")
       } else if (selectedCommand === "Translate") {
-        editor.chain().focus().setContent("Translating the content...").run()
+        processedText = await grammarly.translate(text, "Tamil")
       } else if (selectedCommand === "Elaborate") {
-        editor.chain().focus().setContent("Elaborating on the content...").run()
+        processedText = await grammarly.elaborate(text)
       }
-      
-      setSelectedCommand("")
-    },
 
+      editor.chain().focus().setContent(processedText).run()
+      setSelectedCommand("")
+      setLoading(false)
+    },
   })
 
   if (!editor) return null
@@ -153,8 +170,9 @@ export default function NotionLikeEditor() {
         <h1 className="text-2xl font-bold">Notion-like Editor</h1>
         <ApiKeyManager />
       </div>
-      <div className="border rounded-lg">
-        <EditorContent editor={editor} className="prose max-w-none p-4" />
+      <div className="border rounded-lg p-4">
+        {loading && <p className="text-gray-500">Processing...</p>}
+        <EditorContent editor={editor} className="prose max-w-none" />
       </div>
     </div>
   )
