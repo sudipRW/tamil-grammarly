@@ -55,14 +55,16 @@ class Grammarly {
 
     async suggestNextSentenceTamil(text: string) {
         console.log("Suggesting next sentence for:", text);
-        const nextSentence = await this.model.generateContent(`The following input is a sentence in Tamil. Provide the next sentence in Tamil. The input: ${text} Only give the tamil suggestion and nothing else`);
+        const nextSentence = await this.model.generateContent(`The following input is a sentence in Tamil.
+        Provide the next sentence in Tamil. The input: ${text} Only give the tamil suggestion and nothing else`);
         console.log("Next sentence:", nextSentence.response.text());
         return nextSentence.response.text();
     }
 
     async suggestNextSentenceEnglish(text: string) {
         console.log("Suggesting next sentence for:", text);
-        const nextSentence = await this.model.generateContent(`The following input is a sentence in English or Tamil or a combination of both languages. Suggest the sentence which should follow this text. The input: ${text} Only give the english suggestion and nothing else`);
+        const nextSentence = await this.model.generateContent(`The following input is a sentence in English or Tamil or a combination of both languages. Suggest the sentence which should follow this text. 
+        The input: ${text} Only give the english suggestion and nothing else`);
         console.log("Next sentence eng:", nextSentence.response.text());
         return nextSentence.response.text();
     }
