@@ -77,7 +77,7 @@ export default function TiptapEditor() {
       const summarized_text = await gram.summarize_paragraph(currentText, "Tamil", "English")
       console.log(summarized_text);
 
-      const translated_text = await gram.translate(currentText, "Hindi");
+      const translated_text = await gram.translate(currentText, "Telugu");
       console.log(translated_text);
 
       if (corrected_text.startsWith("Error:")) {
