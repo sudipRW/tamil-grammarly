@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Bold, Italic, List, Check } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 import Grammarly from "../_grammarly/grammarly"
+import ApiKeyManager from "@/components/apikey_manager"
 
 const colors = {
   primary: "#3498db",
@@ -18,9 +19,7 @@ const colors = {
 }
 
 export default function TiptapEditor() {
-  const [apiKey, setApiKey] = useState("")
   const [context, setContext] = useState("Convert to formal Tamil")
-  const hasPromptedForApiKey = useRef(false)
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -40,31 +39,14 @@ export default function TiptapEditor() {
     },
   })
 
-  useEffect(() => {
-    if (!hasPromptedForApiKey.current) {
-      hasPromptedForApiKey.current = true
-      const key = prompt("Please enter your API key:")
-      if (key) {
-        setApiKey(key)
-      } else {
-        alert("API key is required to use this application.")
-      }
-    }
-  }, [])
-
   const handleGrammarCheck = async () => {
-    if (!apiKey) {
-      alert("API key is missing. Please refresh the page and enter your API key.")
-      return
-    }
-
     if (!editor?.getText().trim()) {
       alert("Please enter some text before checking grammar.")
       return
     }
 
     try {
-      const gram = new Grammarly(apiKey)
+      const gram = new Grammarly(context)
       const currentText = editor?.getText() || ""
 
       const corrected_text = await gram.grammarly(currentText, context);
@@ -74,6 +56,7 @@ export default function TiptapEditor() {
       const nextSentenceEng = await gram.suggestNextSentenceEnglish(corrected_text);
       console.log(nextSentenceEng);
 
+      console.log("Elaborating the text : ", await gram.elaborate(corrected_text));
       const summarized_text = await gram.summarize_paragraph(currentText, "Tamil", "English")
       console.log(summarized_text);
 
@@ -103,24 +86,13 @@ export default function TiptapEditor() {
           <h1 className="text-2xl font-bold" style={{ color: colors.primary }}>
             TamilGrammarly
           </h1>
-          
+          <ApiKeyManager />
         </div>
       </header>
 
       <main className="flex-grow container mx-auto py-8">
         <Card className="w-full max-w-4xl mx-auto shadow-lg bg-white">
           <CardHeader className="border-b" style={{ backgroundColor: colors.primary, color: "white" }}>
-            <div className="flex items-center justify-between gap-4 pb-4">
-              <div className="flex-1 flex items-center gap-2">
-                <Input
-                  value={context}
-                  onChange={(e) => setContext(e.target.value)}
-                  placeholder="Enter context (e.g., 'convert english to tamil', 'formal tamil')"
-                  className="max-w-sm bg-white text-gray-800"
-                />
-              </div>
-            </div>
-            
             <div className="flex items-center gap-2 pt-2">
               <Button
                 variant="ghost"
@@ -172,4 +144,3 @@ export default function TiptapEditor() {
     </div>
   )
 }
-

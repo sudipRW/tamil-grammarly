@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2, Clipboard } from "lucide-react"
 import { toast } from "sonner"
 import { openDB } from "idb"
 
@@ -23,7 +23,7 @@ export default function ApiKeyManager() {
   const [showApiKey, setShowApiKey] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  // Load API Key
+  // Load API Key and show dialog if no key exists
   useEffect(() => {
     const getApiKey = async () => {
       try {
@@ -32,16 +32,28 @@ export default function ApiKeyManager() {
         if (key?.value) {
           setApiKey(key.value)
           setShowApiKey(true)
+        } else {
+          setIsDialogOpen(true) // Auto-show dialog if no key exists
         }
       } catch (error) {
         console.error("Error fetching API key from IndexedDB:", error)
+        setIsDialogOpen(true) // Show dialog on error as well
       }
     }
     getApiKey()
   }, [])
 
+  const handlePasteApiKey = async () => {
+    try {
+      const text = await navigator.clipboard.readText()
+      setApiKey(text)
+    } catch (err) {
+      console.error("Failed to read clipboard:", err)
+    }
+  }
+
   // Save API Key
-  const saveApiKey = async (key : any) => {
+  const saveApiKey = async (key : string) => {
     try {
       const db = await initDB()
       await db.put("apiKey", { id: "current", value: key })
@@ -90,12 +102,23 @@ export default function ApiKeyManager() {
             <DialogHeader>
               <DialogTitle>Enter API Key</DialogTitle>
             </DialogHeader>
-            <Input
-              type="password"
-              placeholder="Enter your API key"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-            />
+            <div className="flex gap-2 items-center">
+              <Input
+                type="password"
+                placeholder="Enter your API key"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handlePasteApiKey}
+                title="Paste from clipboard"
+              >
+                <Clipboard className="h-4 w-4" />
+              </Button>
+            </div>
             <Button onClick={() => saveApiKey(apiKey)}>Save</Button>
           </DialogContent>
         </Dialog>
