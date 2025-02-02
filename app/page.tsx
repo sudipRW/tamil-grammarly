@@ -6,20 +6,16 @@ import StarterKit from "@tiptap/starter-kit"
 import { ReactRenderer } from "@tiptap/react"
 import tippy from "tippy.js"
 import "tippy.js/dist/tippy.css"
-import { useState, useEffect, forwardRef } from "react"
+import { useState, forwardRef } from "react"
 import ApiKeyManager from "@/components/apikey_manager"
-import Grammarly from "./_grammarly/grammarly" // Import your Grammarly class
+import Grammarly from "./_grammarly/grammarly"
 
 // Initialize Grammarly
 const grammarly = new Grammarly("AIzaSyA91aNJVRZ0n5G5byHqLuKRPeVgzWOEtYY")
 
-// Suggestion component for the dropdown
 const CommandsList = forwardRef((props, ref) => {
   return (
-    <div 
-      ref={ref} 
-      className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50"
-    >
+    <div ref={ref} className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50">
       {props.items.map((item, index) => (
         <button
           key={index}
@@ -34,14 +30,10 @@ const CommandsList = forwardRef((props, ref) => {
 })
 CommandsList.displayName = "CommandsList"
 
-// Suggestion configuration
 const suggestion = {
   items: ({ query }) => {
-    console.log(query);
     const commands = ["Summarize", "Translate", "Elaborate"]
-    return commands.filter(item =>
-      item.toLowerCase().startsWith(query.toLowerCase())
-    ).slice(0, 10)
+    return commands.filter((item) => item.toLowerCase().startsWith(query.toLowerCase())).slice(0, 10)
   },
 
   render: () => {
@@ -49,7 +41,7 @@ const suggestion = {
     let popup
 
     return {
-      onStart: props => {
+      onStart: (props) => {
         component = new ReactRenderer(CommandsList, {
           props,
           editor: props.editor,
@@ -63,13 +55,13 @@ const suggestion = {
           interactive: true,
           trigger: "manual",
           placement: "bottom-start",
-          theme: 'light',
+          theme: "light",
         })
       },
 
       onUpdate(props) {
         component?.updateProps(props)
-        
+
         popup[0].setProps({
           getReferenceClientRect: props.clientRect,
         })
@@ -92,7 +84,6 @@ const suggestion = {
   },
 }
 
-// Create the slash commands extension
 const SlashCommands = Extension.create({
   name: "slashCommands",
 
@@ -131,34 +122,38 @@ const SlashCommands = Extension.create({
   },
 })
 
+const handleGrammarCheck = async (text: string | undefined) => {
+  console.log("Grammar check triggered by full stop")
+  const correctedText = await grammarly.grammarly(text)
+  console.log("Corrected text:", correctedText)
+  return correctedText
+}
+
+const GrammarCheck = Extension.create({
+  name: "grammarCheck",
+
+  addKeyboardShortcuts() {
+    return {
+      ".": async () => {
+        // const { selection } = this.editor.state
+        const text = this.editor.getText()
+
+        const correctedText = await handleGrammarCheck(text);
+        this.editor.chain().focus().setContent(correctedText).run();
+      },
+    }
+  },
+})
+
 export default function NotionLikeEditor() {
-  const [selectedCommand, setSelectedCommand] = useState("")
   const [loading, setLoading] = useState(false)
 
   const editor = useEditor({
-    extensions: [
-      StarterKit,
-      SlashCommands,
-    ],
-    content: "<p>Welcome to the Notion-like editor! Type / to see available commands.</p>",
-    onUpdate: async ({ editor }) => {
-      if (!editor || !selectedCommand) return
-      setLoading(true)
-
-      const text = editor.getText()
-      let processedText = ""
-
-      if (selectedCommand === "Summarize") {
-        processedText = await grammarly.summarize_paragraph(text, "English", "English")
-      } else if (selectedCommand === "Translate") {
-        processedText = await grammarly.translate(text, "Tamil")
-      } else if (selectedCommand === "Elaborate") {
-        processedText = await grammarly.elaborate(text)
-      }
-
-      editor.chain().focus().setContent(processedText).run()
-      setSelectedCommand("")
-      setLoading(false)
+    extensions: [StarterKit, SlashCommands, GrammarCheck],
+    content:
+      "<p>Welcome to the Notion-like editor! Type / to see available commands. Type a full stop (.) to trigger grammar check.</p>",
+    onUpdate: ({ editor }) => {
+      if (!editor) return
     },
   })
 
@@ -177,3 +172,4 @@ export default function NotionLikeEditor() {
     </div>
   )
 }
+
