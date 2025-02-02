@@ -103,7 +103,7 @@ class Grammarly {
         }
     }
     async elaborate(text : string){
-        const elaboratedLang = await this.model.generateContent(`Detect the language of the following text and elaborate on it in the same language. The input: ${text}`);
+        const elaboratedLang = await this.model.generateContent(`Detect the language of the following text and elaborate on it in the same language. The input: ${text} Return the resultant text only and no other format`);
         return elaboratedLang.response.text();
     }
 }
