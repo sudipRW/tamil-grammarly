@@ -23,7 +23,7 @@ class Grammarly {
         }
     }
 
-    async grammarly(text: string, context : string) {
+    async grammarly(text: string | undefined) {
         try {
             let tamilText = text;
             console.log(tamilText);
@@ -44,7 +44,7 @@ class Grammarly {
 
             // correctedTextQuery = await this.model.generateContent(`The following input is a combination of Tamil and English text. The user wants you to add this context to the text and perform this function on the input text. The input: ${tamilText}. The context ${context}. THE AUGMENTATION MUST CONTAIN MAJORLY TAMIL TEXT AND LITTLE ENGLISH. DONOT GIVE A TRANSLATION. INCLUDE A FEW IENGLISH WORDS ALONG WITH TAMIL TEXT.`)
             console.log("Corrected text:", correctedTextQuery.response.text());
-            console.log("Context : ", context);
+            // console.log("Context : ", context);
             return correctedTextQuery.response.text();
         } 
         catch (e : any) {
@@ -103,7 +103,7 @@ class Grammarly {
         }
     }
     async elaborate(text : string){
-        const elaboratedLang = await this.model.generateContent(`Detect the language of the following text and elaborate on it in the same language. The input: ${text}`);
+        const elaboratedLang = await this.model.generateContent(`Detect the language of the following text and elaborate on it in the same language. The input: ${text} Return the resultant text only and no other format`);
         return elaboratedLang.response.text();
     }
 }

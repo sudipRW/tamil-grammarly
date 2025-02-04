@@ -1,21 +1,21 @@
 "use client"
 
 import { useEditor, EditorContent, Extension } from "@tiptap/react"
-import {Suggestion} from "@tiptap/suggestion"
+import { Suggestion } from "@tiptap/suggestion"
 import StarterKit from "@tiptap/starter-kit"
 import { ReactRenderer } from "@tiptap/react"
 import tippy from "tippy.js"
 import "tippy.js/dist/tippy.css"
-import { useState, useCallback, forwardRef } from "react"
+import { useState, forwardRef } from "react"
 import ApiKeyManager from "@/components/apikey_manager"
+import Grammarly from "./_grammarly/grammarly"
 
-// Suggestion component for the dropdown
+// Initialize Grammarly
+const grammarly = new Grammarly("AIzaSyA91aNJVRZ0n5G5byHqLuKRPeVgzWOEtYY")
+
 const CommandsList = forwardRef((props, ref) => {
   return (
-    <div 
-      ref={ref} 
-      className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50"
-    >
+    <div ref={ref} className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50">
       {props.items.map((item, index) => (
         <button
           key={index}
@@ -30,13 +30,10 @@ const CommandsList = forwardRef((props, ref) => {
 })
 CommandsList.displayName = "CommandsList"
 
-// Suggestion configuration
 const suggestion = {
   items: ({ query }) => {
     const commands = ["Summarize", "Translate", "Elaborate"]
-    return commands.filter(item =>
-      item.toLowerCase().startsWith(query.toLowerCase())
-    ).slice(0, 10)
+    return commands.filter((item) => item.toLowerCase().startsWith(query.toLowerCase())).slice(0, 10)
   },
 
   render: () => {
@@ -44,7 +41,7 @@ const suggestion = {
     let popup
 
     return {
-      onStart: props => {
+      onStart: (props) => {
         component = new ReactRenderer(CommandsList, {
           props,
           editor: props.editor,
@@ -58,13 +55,13 @@ const suggestion = {
           interactive: true,
           trigger: "manual",
           placement: "bottom-start",
-          theme: 'light',
+          theme: "light",
         })
       },
 
       onUpdate(props) {
         component?.updateProps(props)
-        
+
         popup[0].setProps({
           getReferenceClientRect: props.clientRect,
         })
@@ -87,7 +84,6 @@ const suggestion = {
   },
 }
 
-// Create the slash commands extension
 const SlashCommands = Extension.create({
   name: "slashCommands",
 
@@ -95,14 +91,21 @@ const SlashCommands = Extension.create({
     return {
       suggestion: {
         char: "/",
-        command: ({ editor, range, props }) => {
-          editor
-            .chain()
-            .focus()
-            .deleteRange(range)
-            .setNode("paragraph")
-            .insertContent(` Executing ${props} command...`)
-            .run()
+        command: async ({ editor, range, props }) => {
+          editor.chain().focus().deleteRange(range).setNode("paragraph").insertContent(` Processing ${props}...`).run()
+
+          let result = ""
+          const text = editor.getText()
+
+          if (props === "Summarize") {
+            result = await grammarly.summarize_paragraph(text, "English", "English")
+          } else if (props === "Translate") {
+            result = await grammarly.translate(text, "Tamil")
+          } else if (props === "Elaborate") {
+            result = await grammarly.elaborate(text)
+          }
+
+          editor.chain().focus().setContent(result).run()
         },
         ...suggestion,
       },
@@ -119,30 +122,39 @@ const SlashCommands = Extension.create({
   },
 })
 
+const handleGrammarCheck = async (text: string | undefined) => {
+  console.log("Grammar check triggered by full stop")
+  const correctedText = await grammarly.grammarly(text)
+  console.log("Corrected text:", correctedText)
+  return correctedText
+}
+
+const GrammarCheck = Extension.create({
+  name: "grammarCheck",
+
+  addKeyboardShortcuts() {
+    return {
+      ".": async () => {
+        // const { selection } = this.editor.state
+        const text = this.editor.getText()
+
+        const correctedText = await handleGrammarCheck(text);
+        this.editor.chain().focus().setContent(correctedText).run();
+      },
+    }
+  },
+})
+
 export default function NotionLikeEditor() {
-  const [selectedCommand, setSelectedCommand] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const editor = useEditor({
-    extensions: [
-      StarterKit,
-      SlashCommands,
-    ],
-    content: "<p  >Welcome to the Notion-like editor! Type / to see available commands.</p>",
+    extensions: [StarterKit, SlashCommands, GrammarCheck],
+    content:
+      "<p>Welcome to the Notion-like editor! Type / to see available commands. Type a full stop (.) to trigger grammar check.</p>",
     onUpdate: ({ editor }) => {
-      if (!editor || !selectedCommand) return
-
-      // Handle command execution
-      if (selectedCommand === "Summarize") {
-        editor.chain().focus().setContent("Summarizing the content...").run()
-      } else if (selectedCommand === "Translate") {
-        editor.chain().focus().setContent("Translating the content...").run()
-      } else if (selectedCommand === "Elaborate") {
-        editor.chain().focus().setContent("Elaborating on the content...").run()
-      }
-      
-      setSelectedCommand("")
+      if (!editor) return
     },
-
   })
 
   if (!editor) return null
@@ -150,12 +162,14 @@ export default function NotionLikeEditor() {
   return (
     <div className="max-w-4xl mx-auto p-4">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Notion-like Editor</h1>
+        <h1 className="text-2xl font-bold">Tamil Grammarly</h1>
         <ApiKeyManager />
       </div>
-      <div className="border rounded-lg">
-        <EditorContent editor={editor} className="prose max-w-none p-4" />
+      <div className="border rounded-lg p-4">
+        {loading && <p className="text-gray-500">Processing...</p>}
+        <EditorContent editor={editor} className="prose max-w-none" />
       </div>
     </div>
   )
 }
+
