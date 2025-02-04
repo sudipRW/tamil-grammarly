@@ -8,6 +8,10 @@ import tippy from "tippy.js"
 import "tippy.js/dist/tippy.css"
 import { useState, forwardRef, useEffect } from "react"
 import ApiKeyManager from "@/components/apikey_manager"
+import Grammarly from "./_grammarly/grammarly"
+
+// Initialize Grammarly
+const grammarly = new Grammarly("AIzaSyA91aNJVRZ0n5G5byHqLuKRPeVgzWOEtYY")
 
 const CommandsList = forwardRef((props, ref) => {
   const { items, command, selectedIndex } = props
@@ -95,22 +99,7 @@ const suggestion = {
       },
 
       onUpdate(props) {
-        component?.updateProps({
-          ...props,
-          selectedIndex,
-          upHandler: () => {
-            selectedIndex = (selectedIndex - 1 + props.items.length) % props.items.length
-            component.updateProps({ selectedIndex })
-          },
-          downHandler: () => {
-            selectedIndex = (selectedIndex + 1) % props.items.length
-            component.updateProps({ selectedIndex })
-          },
-          enterHandler: () => {
-            const item = props.items[selectedIndex]
-            props.command(item)
-          },
-        })
+        component?.updateProps(props)
 
         popup[0].setProps({
           getReferenceClientRect: props.clientRect,
@@ -147,14 +136,21 @@ const SlashCommands = Extension.create({
     return {
       suggestion: {
         char: "/",
-        command: ({ editor, range, props }) => {
-          editor
-            .chain()
-            .focus()
-            .deleteRange(range)
-            .setNode("paragraph")
-            .insertContent(` Executing ${props} command...`)
-            .run()
+        command: async ({ editor, range, props }) => {
+          editor.chain().focus().deleteRange(range).setNode("paragraph").insertContent(` Processing ${props}...`).run()
+
+          let result = ""
+          const text = editor.getText()
+
+          if (props === "Summarize") {
+            result = await grammarly.summarize_paragraph(text, "English", "English")
+          } else if (props === "Translate") {
+            result = await grammarly.translate(text, "Tamil")
+          } else if (props === "Elaborate") {
+            result = await grammarly.elaborate(text)
+          }
+
+          editor.chain().focus().setContent(result).run()
         },
         ...suggestion,
       },
@@ -170,24 +166,38 @@ const SlashCommands = Extension.create({
   },
 })
 
+const handleGrammarCheck = async (text: string | undefined) => {
+  console.log("Grammar check triggered by full stop")
+  const correctedText = await grammarly.grammarly(text)
+  console.log("Corrected text:", correctedText)
+  return correctedText
+}
+
+const GrammarCheck = Extension.create({
+  name: "grammarCheck",
+
+  addKeyboardShortcuts() {
+    return {
+      ".": async () => {
+        // const { selection } = this.editor.state
+        const text = this.editor.getText()
+
+        const correctedText = await handleGrammarCheck(text);
+        this.editor.chain().focus().setContent(correctedText).run();
+      },
+    }
+  },
+})
+
 export default function NotionLikeEditor() {
-  const [selectedCommand, setSelectedCommand] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const editor = useEditor({
-    extensions: [StarterKit, SlashCommands],
-    content: "<p>Welcome to the editor!</p>",
+    extensions: [StarterKit, SlashCommands, GrammarCheck],
+    content:
+      "<p>Welcome to the editor!. Type a full stop (.) to trigger grammar check.</p>",
     onUpdate: ({ editor }) => {
-      if (!editor || !selectedCommand) return
-
-      if (selectedCommand === "Summarize") {
-        editor.chain().focus().setContent("Summarizing the content...").run()
-      } else if (selectedCommand === "Translate") {
-        editor.chain().focus().setContent("Translating the content...").run()
-      } else if (selectedCommand === "Elaborate") {
-        editor.chain().focus().setContent("Elaborating the content...").run()
-      }
-
-      setSelectedCommand("")
+      if (!editor) return
     },
   })
 
@@ -207,11 +217,17 @@ export default function NotionLikeEditor() {
                 <ApiKeyManager />
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-[#d0ef71]">
+            <div className={`bg-white rounded-xl shadow-sm overflow-hidden border ${Object.keys(grammarly).length === 0 ? "border-red-500":"border-[#d0ef71]"}`}>
+            {loading && <p className="text-gray-500">Processing...</p>}
               <EditorContent
                 editor={editor}
                 className="prose max-w-none outline-none"
               />
+              {Object.keys(grammarly).length === 0 && (
+                <div className="p-2 rounded-sm bg-red-500 text-white">
+                  No api key found.
+                </div>
+              )}
             </div>
           </div>
 
@@ -316,3 +332,4 @@ export default function NotionLikeEditor() {
     </div>
   )
 }
+

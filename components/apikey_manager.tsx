@@ -33,11 +33,11 @@ export default function ApiKeyManager() {
           setApiKey(key.value)
           setShowApiKey(true)
         } else {
-          setIsDialogOpen(true) // Auto-show dialog if no key exists
+          setIsDialogOpen(false)
         }
       } catch (error) {
         console.error("Error fetching API key from IndexedDB:", error)
-        setIsDialogOpen(true) // Show dialog on error as well
+        setIsDialogOpen(false) // Show dialog on error as well
       }
     }
     getApiKey()
