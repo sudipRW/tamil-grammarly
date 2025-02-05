@@ -273,7 +273,7 @@ export default function NotionLikeEditor() {
               </div>
               <div className="p-4 space-y-3">
                 <p className="text-[#2a3416]">Type <span className="font-mono bg-[#f4f8e8] px-1 rounded">/</span> to access:</p>
-                <ul className="space-y-2 text-sm text-[#2a3416]">
+                <ul className="space-y-2 text-[16px] text-[#2a3416]">
                   <li className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[#d0ef71]"></span>
                     Summarize text
@@ -295,7 +295,7 @@ export default function NotionLikeEditor() {
               <div className="bg-[#d0ef71] p-3">
                 <h2 className="text-[#2a3416] font-semibold">Tips</h2>
               </div>
-              <div className="p-4 text-sm text-[#2a3416]">
+              <div className="p-4 text-[16px] text-[#2a3416]">
                 <ul className="space-y-2">
                   <li>• Use arrow keys to navigate commands</li>
                   <li>• Press Enter to select a command</li>
@@ -313,7 +313,7 @@ export default function NotionLikeEditor() {
           height: 100%;
           outline: none !important;
           padding: 2rem;
-          font-size: 1.1rem;
+          font-size: 1.3rem;
           line-height: 1.8;
           color: #2a3416;
         }
