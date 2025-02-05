@@ -211,30 +211,47 @@ const handleGrammarCheck = async (text: string | undefined) => {
 const GrammarCheck = Extension.create({
   name: "grammarCheck",
 
+  addOptions() {
+    return {
+      setLoading: () => {}, // Will be set from editor
+    }
+  },
+
   addKeyboardShortcuts() {
     return {
       ".": () => {
-        // Since we're dealing with an async operation, we'll call it and resolve the boolean synchronously
         const applyGrammarCheck = async () => {
           try {
+            this.options.setLoading(true);
+            
+            this.editor.chain().focus().insertContent('.').run();
+            
+            const currentPosition = this.editor.state.selection.from;
+            this.editor.chain()
+              .focus()
+              .insertContent(' Processing...')
+              .run();
+
             const text = this.editor.getText();
             const correctedText = await handleGrammarCheck(text);
+            
             this.editor.chain().focus().setContent(correctedText).run();
-            return true; // Indicating success
+            
+            this.options.setLoading(false);
+            return true;
           } catch (error) {
             console.error("Grammar check failed:", error);
-            return false; // Indicating failure
+            this.options.setLoading(false);
+            return false;
           }
         };
         
-        applyGrammarCheck(); // Call the async function here
-        
-        return true; // You can modify this to `false` if you prefer to return `false` synchronously by default
+        applyGrammarCheck();
+        return true;
       },
     };
-  }  
-  
-})
+  }
+});
 
 export default function NotionLikeEditor() {
   const [loading, setLoading] = useState(false)
@@ -245,9 +262,18 @@ export default function NotionLikeEditor() {
   }, [])
   
   const editor = useEditor({
-    extensions: [StarterKit, SlashCommands, GrammarCheck],
+    extensions: [StarterKit, SlashCommands,
+      GrammarCheck.configure({
+        setLoading: setLoading
+      })
+    ],
     content:
       "<p>Welcome to the editor!. Type a full stop (.) to trigger grammar check.</p>",
+    editorProps: {
+      attributes: {
+        class: 'w-full max-w-full overflow-x-hidden'
+      }
+    },
     onUpdate: ({ editor }) => {
       if (!editor) return
     },
@@ -261,7 +287,7 @@ export default function NotionLikeEditor() {
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex gap-6">
           {/* Main Editor Section */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0"> {/* Added min-w-0 */}
             <div className="mb-6">
               <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-[#2a3416]">
@@ -271,11 +297,12 @@ export default function NotionLikeEditor() {
               </div>
             </div>
             <div className={`bg-white rounded-xl shadow-sm overflow-hidden border ${(apiKey == "") ? "border-red-500":"border-[#d0ef71]"}`}>
-            {loading && <p className="text-gray-500">Processing...</p>}
-              <EditorContent
-                editor={editor}
-                className="prose max-w-none outline-none"
-              />
+              <div className="w-full relative"> {/* Added container div */}
+                <EditorContent
+                  editor={editor}
+                  className="prose w-full relative"
+                />
+              </div>
               {apiKey == "" && (
                 <div className="p-2 rounded-sm bg-red-500 text-white">
                   No api key found.
@@ -284,10 +311,9 @@ export default function NotionLikeEditor() {
             </div>
           </div>
 
-          {/* Notes Section */}
+          {/* Rest of your sidebar code remains the same */}
           <div className="w-80 space-y-4">
-            {/* Quick Commands Card */}
-            <div className="bg-white rounded-xl border border-[#d0ef71] overflow-hidden">
+          <div className="bg-white rounded-xl border border-[#d0ef71] overflow-hidden">
               <div className="bg-[#d0ef71] p-3">
                 <h2 className="text-[#2a3416] font-semibold">Quick Commands</h2>
               </div>
@@ -329,27 +355,63 @@ export default function NotionLikeEditor() {
 
       <style jsx global>{`
         .ProseMirror {
-          min-height: 500px;
+          position: relative;
+          max-height: 500px;
           height: 100%;
+          width: 100%;
           outline: none !important;
           padding: 2rem;
           font-size: 1.3rem;
           line-height: 1.8;
           color: #2a3416;
+          overflow-y: auto;
+          overflow-x: hidden;
+          word-wrap: break-word;
+          white-space: pre-wrap;
+          box-sizing: border-box;
+          display: block; /* Added */
         }
 
-        .ProseMirror:focus {
-          outline: none !important;
+        /* Force content to wrap */
+        .ProseMirror > * {
+          width: 100% !important;
+          max-width: 100% !important;
+          overflow-wrap: break-word !important;
+          word-break: break-word !important; /* Added */
+          white-space: pre-wrap !important; /* Added */
         }
 
+        /* Specific handling for paragraphs */
         .ProseMirror p {
           margin: 0.8em 0;
+          position: relative; /* Added */
+          width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box;
+          display: block; /* Added */
+        }
+
+        /* Handle inline content */
+        .ProseMirror span,
+        .ProseMirror a {
+          display: inline-block; /* Added */
+          max-width: 100%;
+          overflow-wrap: break-word;
+          word-break: break-word;
+        }
+
+        /* Remove any potential flex behavior */
+        .prose {
+          display: block !important;
+          width: 100% !important;
+          max-width: none !important;
         }
 
         .ProseMirror p:first-child {
           margin-top: 0;
         }
 
+        /* Rest of your styles remain the same */
         .ProseMirror::-webkit-scrollbar {
           width: 8px;
         }
