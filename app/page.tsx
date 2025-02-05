@@ -10,6 +10,8 @@ import { useState, forwardRef, useEffect } from "react"
 import ApiKeyManager from "@/components/apikey_manager"
 import Grammarly from "./_grammarly/grammarly"
 import { openDB } from "idb"
+import Image from "next/image"
+import randomwalkIcon from "./randomwalk.png"
 
 interface CommandsListProps {
   items: any[]; // Change `any[]` to a more specific type if possible
@@ -201,6 +203,7 @@ const SlashCommands = Extension.create({
   },
 })
 
+
 const handleGrammarCheck = async (text: string | undefined) => {
   console.log("Grammar check triggered by full stop")
   const correctedText = await grammarly.grammarly(text)
@@ -213,7 +216,7 @@ const GrammarCheck = Extension.create({
 
   addOptions() {
     return {
-      setLoading: () => {}, // Will be set from editor
+      setLoading: () => {},
     }
   },
 
@@ -258,7 +261,8 @@ export default function NotionLikeEditor() {
   }, [])
   
   const editor = useEditor({
-    extensions: [StarterKit, SlashCommands,
+    extensions: [StarterKit,
+      SlashCommands,
       GrammarCheck.configure({
         setLoading: setLoading
       })
@@ -268,12 +272,12 @@ export default function NotionLikeEditor() {
     editorProps: {
       attributes: {
         class: 'w-full max-w-full overflow-x-hidden'
-      }
+      },
     },
     onUpdate: ({ editor }) => {
       if (!editor) return
     },
-    immediatelyRender: false
+    immediatelyRender: false,
   })
 
   if (!editor) return null
@@ -310,6 +314,10 @@ export default function NotionLikeEditor() {
                   No api key found.
                 </div>
               )}
+            </div>
+            <div className="flex">
+              <p>Powered by</p>
+              <Image src={randomwalkIcon} alt="randomwalk logo" className="w-36"/>
             </div>
           </div>
 
