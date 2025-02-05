@@ -222,8 +222,6 @@ export default function NotionLikeEditor() {
   useEffect(() => {
     getApiKey(setApiKey)
   }, [])
-
-  console.log(apiKey)
   
   const editor = useEditor({
     extensions: [StarterKit, SlashCommands, GrammarCheck],
@@ -232,6 +230,7 @@ export default function NotionLikeEditor() {
     onUpdate: ({ editor }) => {
       if (!editor) return
     },
+    immediatelyRender: false
   })
 
   if (!editor) return null
