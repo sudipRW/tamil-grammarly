@@ -227,10 +227,6 @@ const GrammarCheck = Extension.create({
             this.editor.chain().focus().insertContent('.').run();
             
             const currentPosition = this.editor.state.selection.from;
-            this.editor.chain()
-              .focus()
-              .insertContent(' Processing...')
-              .run();
 
             const text = this.editor.getText();
             const correctedText = await handleGrammarCheck(text);
@@ -296,6 +292,12 @@ export default function NotionLikeEditor() {
                 <ApiKeyManager />
               </div>
             </div>
+            {loading && (
+              <div className="flex gap-2 mb-2 bg-white rounded-lg p-1 justify-center items-center w-[150px]">
+                <p className="">Processing</p>
+                <div className="w-4 h-4 border-4 border-t-[#d0ef71] border-r-[#d0ef71] border-b-transparent border-l-[#d0ef71] rounded-full animate-spin"></div>
+              </div>
+            )}
             <div className={`bg-white rounded-xl shadow-sm overflow-hidden border ${(apiKey == "") ? "border-red-500":"border-[#d0ef71]"}`}>
               <div className="w-full relative"> {/* Added container div */}
                 <EditorContent
