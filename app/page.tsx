@@ -9,13 +9,37 @@ import "tippy.js/dist/tippy.css"
 import { useState, forwardRef, useEffect } from "react"
 import ApiKeyManager from "@/components/apikey_manager"
 import Grammarly from "./_grammarly/grammarly"
+import { openDB } from "idb"
 
-// Initialize Grammarly
-const grammarly = new Grammarly("AIzaSyA91aNJVRZ0n5G5byHqLuKRPeVgzWOEtYY")
+let grammarly = {}
+
+  const initDB = async () => {
+    return openDB("NotionLikeEditor", 1, {
+      upgrade(db) {
+        if (!db.objectStoreNames.contains("apiKey")) {
+          db.createObjectStore("apiKey", { keyPath: "id" })
+        }
+      },
+    })
+  }
+
+ 
+  const getApiKey = async (setApiKey) => {
+    try {
+      const db = await initDB()
+      const key = await db.get("apiKey", "current")
+      if (key?.value) {
+        setApiKey(key?.value)
+        grammarly = new Grammarly(key?.value)
+      }
+    } catch (error) {
+      console.error("Error fetching API key from IndexedDB:", error)
+    }
+  }
 
 const CommandsList = forwardRef((props, ref) => {
   const { items, command, selectedIndex } = props
-
+  
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "ArrowUp") {
@@ -56,7 +80,7 @@ CommandsList.displayName = "CommandsList"
 
 const suggestion = {
   items: ({ query }) => {
-    const commands = ["Summarize", "Translate", "Elaborate"]
+    const commands = ["Rephrase","Summarize", "Translate", "Elaborate"]
     return commands.filter((item) => item.toLowerCase().startsWith(query.toLowerCase())).slice(0, 10)
   },
   render: () => {
@@ -148,6 +172,8 @@ const SlashCommands = Extension.create({
             result = await grammarly.translate(text, "Tamil")
           } else if (props === "Elaborate") {
             result = await grammarly.elaborate(text)
+          } else if (props === "Rephrase") {
+            result = "வாழைப்பழம் தோல் வழுக்கி வாலிபர் உயிர் ஊசல்"
           }
 
           editor.chain().focus().setContent(result).run()
@@ -191,7 +217,14 @@ const GrammarCheck = Extension.create({
 
 export default function NotionLikeEditor() {
   const [loading, setLoading] = useState(false)
+  const [apiKey, setApiKey] = useState("")
 
+  useEffect(() => {
+    getApiKey(setApiKey)
+  }, [])
+
+  console.log(apiKey)
+  
   const editor = useEditor({
     extensions: [StarterKit, SlashCommands, GrammarCheck],
     content:
@@ -217,13 +250,13 @@ export default function NotionLikeEditor() {
                 <ApiKeyManager />
               </div>
             </div>
-            <div className={`bg-white rounded-xl shadow-sm overflow-hidden border ${Object.keys(grammarly).length === 0 ? "border-red-500":"border-[#d0ef71]"}`}>
+            <div className={`bg-white rounded-xl shadow-sm overflow-hidden border ${(apiKey == "") ? "border-red-500":"border-[#d0ef71]"}`}>
             {loading && <p className="text-gray-500">Processing...</p>}
               <EditorContent
                 editor={editor}
                 className="prose max-w-none outline-none"
               />
-              {Object.keys(grammarly).length === 0 && (
+              {apiKey == "" && (
                 <div className="p-2 rounded-sm bg-red-500 text-white">
                   No api key found.
                 </div>

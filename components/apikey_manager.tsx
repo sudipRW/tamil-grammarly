@@ -61,6 +61,7 @@ export default function ApiKeyManager() {
       setShowApiKey(true)
       setIsDialogOpen(false)
       toast.success("API key added successfully")
+      window.location.reload()
     } catch (error) {
       console.error("Error saving API key:", error)
       toast.error("Failed to save API key")
@@ -75,6 +76,7 @@ export default function ApiKeyManager() {
       setApiKey("")
       setShowApiKey(false)
       toast.success("API key deleted successfully")
+      window.location.reload()
     } catch (error) {
       console.error("Error deleting API key:", error)
       toast.error("Failed to delete API key")
