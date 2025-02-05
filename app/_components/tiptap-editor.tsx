@@ -49,7 +49,7 @@ export default function TiptapEditor() {
       const gram = new Grammarly(context)
       const currentText = editor?.getText() || ""
 
-      const corrected_text = await gram.grammarly(currentText, context);
+      const corrected_text = await gram.grammarly(currentText);
       console.log("Corrected text:", corrected_text)
       const nextSentence = await gram.suggestNextSentenceTamil(corrected_text);
       console.log("Next sentence:", nextSentence)

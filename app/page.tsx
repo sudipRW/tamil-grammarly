@@ -11,7 +11,16 @@ import ApiKeyManager from "@/components/apikey_manager"
 import Grammarly from "./_grammarly/grammarly"
 import { openDB } from "idb"
 
-let grammarly = {}
+interface CommandsListProps {
+  items: any[]; // Change `any[]` to a more specific type if possible
+  command: (string:string) => void;
+  selectedIndex: number;
+  upHandler: () => void; 
+  downHandler: () => void; 
+  enterHandler: () => void; 
+}
+
+let grammarly: Grammarly;
 
   const initDB = async () => {
     return openDB("NotionLikeEditor", 1, {
@@ -37,7 +46,7 @@ let grammarly = {}
     }
   }
 
-const CommandsList = forwardRef((props, ref) => {
+const CommandsList = forwardRef<HTMLDivElement, CommandsListProps>((props, ref) => {
   const { items, command, selectedIndex } = props
   
   useEffect(() => {
@@ -204,15 +213,27 @@ const GrammarCheck = Extension.create({
 
   addKeyboardShortcuts() {
     return {
-      ".": async () => {
-        // const { selection } = this.editor.state
-        const text = this.editor.getText()
-
-        const correctedText = await handleGrammarCheck(text);
-        this.editor.chain().focus().setContent(correctedText).run();
+      ".": () => {
+        // Since we're dealing with an async operation, we'll call it and resolve the boolean synchronously
+        const applyGrammarCheck = async () => {
+          try {
+            const text = this.editor.getText();
+            const correctedText = await handleGrammarCheck(text);
+            this.editor.chain().focus().setContent(correctedText).run();
+            return true; // Indicating success
+          } catch (error) {
+            console.error("Grammar check failed:", error);
+            return false; // Indicating failure
+          }
+        };
+        
+        applyGrammarCheck(); // Call the async function here
+        
+        return true; // You can modify this to `false` if you prefer to return `false` synchronously by default
       },
-    }
-  },
+    };
+  }  
+  
 })
 
 export default function NotionLikeEditor() {
