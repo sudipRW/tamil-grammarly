@@ -75,7 +75,11 @@ class Grammarly {
             let tamilText = text;
             console.log(tamilText);
 
-            const textQuery = await this.model.generateContent(`The following input is in ${from_lang} text. Summarize the text in ${to_lang}. The input: ${text}`);
+            const textQuery = await this.model.generateContent(`Detect the language of the following text and summarize it accurately in the specified target language while preserving the core meaning. Maintain clarity and coherence in the summary. Output only the resultant text without any additional formatting or explanation.  
+
+Input Language: ${from_lang}  
+Target Language: ${to_lang} 
+Input Text: ${text}`);
 
             tamilText = textQuery.response.text().trim();
             console.log("Summarized text:", tamilText);
@@ -92,7 +96,16 @@ class Grammarly {
             let tamilText = text;
             console.log(tamilText);
 
-            const textQuery = await this.model.generateContent(`The following input is in Tamil text. Translate the text to ${to_lang}. The input: ${text}`);
+            const textQuery = await this.model.generateContent(`Transform a mixed Tamil-English text into a gramatically correct Tamil-script output while adhering to the given context.
+
+                        Guidelines:
+                        Convert the text primarily into gramatically and syntactically correct Tamil script while retaining relevant English words where appropriate.
+                        Ensure proper grammar and spelling in both Tamil and English.
+                        Preserve original punctuation unless a correction is necessary for readability.
+                        Do not provide explanations, translations, or additional formatting.
+                        Output should be a naturally flowing text that maintains coherence and readability.
+
+                        Input: ${text}`);
 
             let translatedText = textQuery.response.text().trim();
             console.log("Translated text:", translatedText);
@@ -104,7 +117,9 @@ class Grammarly {
         }
     }
     async elaborate(text : string){
-        const elaboratedLang = await this.model.generateContent(`Detect the language of the following text and elaborate on it in the same language. The input: ${text} Return the resultant text only and no other format`);
+        const elaboratedLang = await this.model.generateContent(`Detect the language of the following text and provide a detailed elaboration in the same language. Ensure the elaboration is contextually relevant and maintains the tone and structure of the original text. Output only the resultant text without any additional formatting or explanation.  
+
+**Input:** ${text}`);
         return elaboratedLang.response.text();
     }
 }
