@@ -38,11 +38,17 @@ class Grammarly {
             const textQuery = await this.model.generateContent({
                 contents: [{
                     parts: [{
-                        text: `The following input will be in English text but may contain words with Tamil pronunciation. 
-                            Convert only the words with Tamil pronunciation to Tamil text, and retain other English words as is, 
-                            while preserving the original punctuation. 
-                            MOST IMPORTANT: DO NOT CORRECT ANY ERRORS IN THE ENGLISH TEXT. 
-                            The input: ${text}`
+                        text: `Prompt:
+Task: Convert English text that may contain Tamil-pronounced words into a mixed-script format.
+
+                        Identify words that have a Tamil pronunciation and convert them into Tamil script.
+                        Retain all other English words and punctuation exactly as they are.
+                        Do not correct any spelling or grammatical errors in the input text.
+                        Output Constraints:
+
+                        Return only the transformed text, with no additional explanations, labels, or formatting.
+                        Input:
+                        ${text}`
                     }]
                 }]
             });
@@ -54,17 +60,18 @@ class Grammarly {
             const correctedTextQuery = await this.model.generateContent({
                 contents: [{
                     parts: [{
-                        text: `The following input is a combination of Tamil and English text. 
-                            Apply this context: "${context}"
-                            Rules:
-                            1. The output must be primarily in Tamil script
-                            2. Keep some relevant English words where appropriate
-                            3. Ensure proper grammar and spelling in both languages
-                            4. Maintain original punctuation unless it needs correction
-                            5. DO NOT provide translations or explanations
-                            6. Format the output as a natural flowing text
-                            
-                            Input text: ${tamilText}`
+                        text: `Task:
+                        Transform a mixed Tamil-English text into a gramatically correct Tamil-script output while adhering to the given context.
+
+                        Guidelines:
+                        Convert the text primarily into gramatically and syntactically correct Tamil script while retaining relevant English words where appropriate.
+                        Ensure proper grammar and spelling in both Tamil and English.
+                        Preserve original punctuation unless a correction is necessary for readability.
+                        Do not provide explanations, translations, or additional formatting.
+                        Output should be a naturally flowing text that maintains coherence and readability.
+
+                        Input:
+                        ${tamilText}`
                     }]
                 }]
             });

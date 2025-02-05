@@ -161,13 +161,13 @@ const SlashCommands = Extension.create({
       suggestion: {
         char: "/",
         command: async ({ editor, range, props }) => {
-          editor.chain().focus().deleteRange(range).setNode("paragraph").insertContent(` Processing ${props}...`).run()
+          editor.chain().focus().deleteRange(range).setNode("paragraph").insertContent(``).run()
 
           let result = ""
           const text = editor.getText()
 
           if (props === "Summarize") {
-            result = await grammarly.summarize_paragraph(text, "English", "English")
+            result = await grammarly.summarize_paragraph(text, "Tamil", "Tamil")
           } else if (props === "Translate") {
             result = await grammarly.translate(text, "Tamil")
           } else if (props === "Elaborate") {
