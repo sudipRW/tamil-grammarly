@@ -12,6 +12,12 @@ import Grammarly from "./_grammarly/grammarly"
 import { openDB } from "idb"
 import Image from "next/image"
 import randomwalkIcon from "./randomwalk.png"
+import { Mic, MicOff } from "lucide-react"
+declare global {
+  interface Window {
+    webkitSpeechRecognition: any;
+  }
+}
 
 interface CommandsListProps {
   items: any[]; // Change `any[]` to a more specific type if possible
@@ -255,9 +261,32 @@ const GrammarCheck = Extension.create({
 export default function NotionLikeEditor() {
   const [loading, setLoading] = useState(false)
   const [apiKey, setApiKey] = useState("")
-
+  const [isListening, setIsListening] = useState(false)
+ const [recognition, setRecognition] = useState<any>(null)
   useEffect(() => {
     getApiKey(setApiKey)
+
+    if ('webkitSpeechRecognition' in window) {
+      const newRecognition = new window.webkitSpeechRecognition()
+      newRecognition.continuous = true
+      newRecognition.interimResults = true
+      newRecognition.lang = 'en-US'
+      
+      newRecognition.onstart = () => setIsListening(true)
+      newRecognition.onend = () => setIsListening(false)
+      newRecognition.onerror = (event: any) => {
+        console.error(event.error)
+        setIsListening(false)
+      }
+      
+      setRecognition(newRecognition)
+    }
+    
+    return () => {
+      if (recognition) {
+        recognition.stop()
+      }
+    }
   }, [])
   
   const editor = useEditor({
@@ -280,6 +309,31 @@ export default function NotionLikeEditor() {
     immediatelyRender: false,
   })
 
+  useEffect(() => {
+    if (recognition && editor) {
+      recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0])
+          .map((result: any) => result.transcript)
+          .join('')
+        editor.commands.setContent(transcript)
+      }
+    }
+  }, [recognition, editor])
+
+  const toggleListening = () => {
+    if (!recognition) {
+      alert('Speech recognition is not supported in this browser.')
+      return
+    }
+    
+    if (isListening) {
+      recognition.stop()
+    } else {
+      recognition.start()
+    }
+  }
+
   if (!editor) return null
 
   return (
@@ -296,12 +350,22 @@ export default function NotionLikeEditor() {
                 <ApiKeyManager />
               </div>
             </div>
-            {loading && (
-              <div className="flex gap-2 mb-2 bg-white rounded-lg p-1 justify-center items-center w-[150px]">
-                <p className="">Processing</p>
-                <div className="w-4 h-4 border-4 border-t-[#d0ef71] border-r-[#d0ef71] border-b-transparent border-l-[#d0ef71] rounded-full animate-spin"></div>
-              </div>
-            )}
+            <div className="flex gap-2">
+                {loading && (
+                  <div className="flex gap-2 mb-2 bg-white rounded-lg p-1 justify-center items-center w-[150px]">
+                    <p className="">Processing</p>
+                    <div className="w-4 h-4 border-4 border-t-[#d0ef71] border-r-[#d0ef71] border-b-transparent border-l-[#d0ef71] rounded-full animate-spin"></div>
+                  </div>
+                )}
+                <button
+                onClick={toggleListening}
+                className={`p-2 mb-1 rounded-full transition-colors ${
+                  isListening ? "bg-red-500 text-white" : "bg-green-500 text-white"
+                }`}
+              >
+                {isListening ? <Mic className="animate-pulse" /> : <MicOff />}
+              </button>
+            </div>
             <div className={`bg-white rounded-xl shadow-sm overflow-hidden border ${(apiKey == "") ? "border-red-500":"border-[#d0ef71]"}`}>
               <div className="w-full relative"> {/* Added container div */}
                 <EditorContent
